@@ -1,0 +1,178 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Search Courses | CourseConnect</title>
+    <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+
+<nav class="navbar">
+    <div class="nav-container">
+        <a class="logo" href="/">
+            <span class="logo-mark">C</span>
+            <span>CourseConnect</span>
+        </a>
+        <div class="nav-links">
+            <a href="/">Home</a>
+            <a href="/list.html">Courses</a>
+            <a class="active" href="/search.html">Search</a>
+            <a href="/register.html">Register</a>
+            <a href="/registrations.html">Registrations</a>
+            <a href="/add.html">Add course</a>
+            <a href="/update.html">Update</a>
+            <a href="/delete.html">Delete</a>
+        </div>
+    </div>
+</nav>
+
+<main class="container">
+    <div class="page-heading">
+        <div>
+            <div class="eyebrow">Quick course lookup</div>
+            <h1>Search a course</h1>
+            <p>Enter a course ID to view its complete details.</p>
+        </div>
+    </div>
+
+    <!-- Search page image -->
+    <img
+        class="page-image"
+        src="https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=1200&q=80"
+        alt="Student using a laptop to search for information"
+        loading="lazy"
+    >
+
+    <section class="form-card">
+        <form id="searchForm">
+            <div class="field">
+                <label for="courseId">Course ID</label>
+                <input
+                    type="number"
+                    id="courseId"
+                    min="1"
+                    placeholder="Example: 101"
+                    required
+                >
+            </div>
+
+            <div class="form-actions">
+                <button type="submit">Search course →</button>
+                <a class="btn btn-outline" href="/list.html">
+                    Browse courses
+                </a>
+            </div>
+        </form>
+
+        <div id="message" class="message" role="status"></div>
+        <div id="result"></div>
+    </section>
+</main>
+
+<footer class="footer">
+    <strong>CourseConnect</strong>
+    <p>Student Course Registration System</p>
+</footer>
+
+<script>
+const form = document.getElementById("searchForm");
+const message = document.getElementById("message");
+const result = document.getElementById("result");
+
+function escapeHTML(value) {
+    return String(value ?? "").replace(/[&<>"']/g, character => ({
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        '"': "&quot;",
+        "'": "&#39;"
+    })[character]);
+}
+
+function showMessage(text, type) {
+    message.textContent = text;
+    message.className = "message show " + type;
+}
+
+form.addEventListener("submit", async function(event) {
+    event.preventDefault();
+
+    const id = document.getElementById("courseId").value.trim();
+
+    result.innerHTML = "";
+    showMessage("Searching for course...", "");
+
+    try {
+        const response = await fetch(
+            "/courses/" + encodeURIComponent(id)
+        );
+
+        let data;
+
+        try {
+            data = await response.json();
+        } catch {
+            throw new Error(
+                "The server did not return JSON. Check your app.js route."
+            );
+        }
+
+        if (!response.ok) {
+            throw new Error(
+                data.message || data.error || "Course not found."
+            );
+        }
+
+        showMessage("Course found successfully!", "success");
+
+        result.innerHTML = `
+            <div class="result-card">
+                <div class="eyebrow">
+                    ${escapeHTML(data.Course_code)}
+                </div>
+
+                <h3>${escapeHTML(data.Course_name)}</h3>
+
+                <div class="detail-grid">
+                    <div class="detail-item">
+                        <span>Course ID</span>
+                        <strong>${escapeHTML(data.Course_ID)}</strong>
+                    </div>
+
+                    <div class="detail-item">
+                        <span>Credits</span>
+                        <strong>${escapeHTML(data.Credits)}</strong>
+                    </div>
+
+                    <div class="detail-item">
+                        <span>Department</span>
+                        <strong>${escapeHTML(data.Department)}</strong>
+                    </div>
+
+                    <div class="detail-item">
+                        <span>Semester</span>
+                        <strong>${escapeHTML(data.Semester)}</strong>
+                    </div>
+                </div>
+
+                <div class="form-actions">
+                    <a class="btn btn-primary" href="/register.html">
+                        Register for a course
+                    </a>
+
+                    <a class="btn btn-outline" href="/list.html">
+                        Back to courses
+                    </a>
+                </div>
+            </div>
+        `;
+    } catch (error) {
+        showMessage(error.message, "error");
+    }
+});
+</script>
+
+</body>
+</html>

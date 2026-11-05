@@ -1,0 +1,227 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Home | CourseConnect</title>
+    <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+
+<nav class="navbar">
+    <div class="nav-container">
+        <a class="logo" href="/">
+            <span class="logo-mark">C</span>
+            <span>CourseConnect</span>
+        </a>
+
+        <div class="nav-links">
+            <a class="active" href="/">Home</a>
+            <a href="/list.html">Courses</a>
+            <a href="/search.html">Search</a>
+            <a href="/register.html">Register</a>
+            <a href="/registrations.html">Registrations</a>
+            <a href="/add.html">Add course</a>
+            <a href="/update.html">Update</a>
+            <a href="/delete.html">Delete</a>
+        </div>
+    </div>
+</nav>
+
+<section class="hero">
+    <div class="hero-inner">
+        <div>
+            <div class="eyebrow">A smarter way to learn</div>
+
+            <h1>
+                Find your next<br>
+                <span>learning journey.</span>
+            </h1>
+
+            <p>
+                Explore college courses, discover new learning
+                opportunities, and manage course registrations
+                through one simple platform.
+            </p>
+
+            <div class="hero-actions">
+                <a class="btn btn-primary" href="/list.html">
+                    Explore courses →
+                </a>
+
+                <a class="btn btn-light" href="/register.html">
+                    Register for a course
+                </a>
+            </div>
+        </div>
+
+        <div class="hero-visual">
+            <div class="book-stack">
+                <div class="book">LEARN</div>
+                <div class="book">GROW</div>
+                <div class="book">CREATE</div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Home page image -->
+<main class="container">
+    <img
+        class="hero-image"
+        src="https://images.unsplash.com/photo-1507842217343-583bb7270b66?auto=format&fit=crop&w=1200&q=80"
+        alt="University library with bookshelves"
+    >
+</main>
+
+<div class="stats">
+    <div class="stat-card">
+        <div class="stat-icon">📚</div>
+        <div>
+            <strong id="courseCount">—</strong>
+            <span>Available courses</span>
+        </div>
+    </div>
+
+    <div class="stat-card">
+        <div class="stat-icon">🎓</div>
+        <div>
+            <strong>Simple</strong>
+            <span>Course discovery</span>
+        </div>
+    </div>
+
+    <div class="stat-card">
+        <div class="stat-icon">✓</div>
+        <div>
+            <strong>Connected</strong>
+            <span>Database-backed records</span>
+        </div>
+    </div>
+</div>
+
+<main class="container section">
+    <div class="section-title">
+        <div class="eyebrow">Everything in one place</div>
+        <h2>Built for your academic journey</h2>
+        <p class="muted">
+            Discover courses and manage academic records with ease.
+        </p>
+    </div>
+
+    <div class="feature-grid">
+
+        <article class="feature-card">
+            <div class="icon">📖</div>
+            <h3>Browse courses</h3>
+            <p>
+                Explore course names, codes, credits, departments
+                and semesters.
+            </p>
+            <a href="/list.html">View courses →</a>
+        </article>
+
+        <article class="feature-card">
+            <div class="icon">🔎</div>
+            <h3>Search courses</h3>
+            <p>
+                Find a specific course using its unique course ID
+                and view its details.
+            </p>
+            <a href="/search.html">Search now →</a>
+        </article>
+
+        <article class="feature-card">
+            <div class="icon">📝</div>
+            <h3>Student registration</h3>
+            <p>
+                Enter your name, select a course, and save
+                your registration.
+            </p>
+            <a href="/register.html">Register now →</a>
+        </article>
+
+        <article class="feature-card">
+            <div class="icon">👥</div>
+            <h3>Registration records</h3>
+            <p>
+                Review registered students and their selected
+                courses.
+            </p>
+            <a href="/registrations.html">View registrations →</a>
+        </article>
+
+        <article class="feature-card">
+            <div class="icon">＋</div>
+            <h3>Add a course</h3>
+            <p>
+                Add new courses to your existing course catalogue.
+            </p>
+            <a href="/add.html">Add course →</a>
+        </article>
+
+        <article class="feature-card">
+            <div class="icon">⚙️</div>
+            <h3>Manage courses</h3>
+            <p>
+                Update existing course details or delete a course
+                when necessary.
+            </p>
+            <a href="/update.html">Manage courses →</a>
+        </article>
+
+    </div>
+</main>
+<section class="container">
+    <div class="page-heading">
+        <p class="eyebrow">PROJECT TESTING</p>
+        <h2>CourseConnect — All Pages</h2>
+        <p>Use the links below to check every page of the application.</p>
+    </div>
+
+    <div class="card-grid">
+        
+        <a class="form-card" href="/list.html">View Courses</a>
+        <a class="form-card" href="/search.html">Search Courses</a>
+        <a class="form-card" href="/register.html">Register for a Course</a>
+        <a class="form-card" href="/registrations.html">View Registrations</a>
+        <a class="form-card" href="/add.html">Add Course</a>
+        <a class="form-card" href="/update.html">Update Course</a>
+        <a class="form-card" href="/delete.html">Delete Course</a>
+    </div>
+</section>
+
+
+<footer class="footer">
+    <strong>CourseConnect</strong>
+    <p>
+        Student Course Registration System<br>
+        Learn more. Explore more. Achieve more.
+    </p>
+</footer>
+
+<script>
+async function loadCourseCount() {
+    const count = document.getElementById("courseCount");
+
+    try {
+        const response = await fetch("/courses");
+        const data = await response.json();
+
+        if (!response.ok || !Array.isArray(data)) {
+            throw new Error("Could not load courses");
+        }
+
+        count.textContent = data.length;
+    } catch (error) {
+        count.textContent = "—";
+        console.error("Course count error:", error);
+    }
+}
+
+loadCourseCount();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registrations | CourseConnect</title>
+    <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="/" class="logo">
+                <span class="logo-mark">C</span>
+                <span>CourseConnect</span>
+            </a>
+
+            <div class="nav-links">
+                <a href="/">Home</a>
+                <a href="/list.html">Courses</a>
+                <a href="/search.html">Search</a>
+                <a href="/register.html">Register</a>
+                <a href="/registrations.html" class="active">Registrations</a>
+                <a href="/add.html">Add Course</a>
+                <a href="/update.html">Update</a>
+                <a href="/delete.html">Delete</a>
+            </div>
+        </div>
+    </nav>
+
+    <main class="container">
+
+        <div class="page-heading">
+            <p class="eyebrow">STUDENT RECORDS</p>
+            <h1>Course Registrations</h1>
+            <p>View the students registered for courses in CourseConnect.</p>
+        </div>
+
+        <!-- New image featuring students -->
+<!-- Registration page image -->
+<img
+    class="page-image"
+    src="https://images.unsplash.com/photo-1523240795612-9a054b0db644?auto=format&fit=crop&w=1200&q=80"
+    alt="College students studying together"
+    loading="eager"
+    onerror="this.style.display='none'"
+>
+
+        <section class="stats">
+            <div class="stat-card">
+                <span>Total Registrations</span>
+                <h2 id="totalCount">0</h2>
+            </div>
+        </section>
+
+        <section class="section">
+
+            <div class="toolbar">
+                <input
+                    type="search"
+                    id="searchInput"
+                    placeholder="Search by student name, registration ID or course ID..."
+                    aria-label="Search registrations"
+                >
+
+                <button
+                    type="button"
+                    class="btn-primary"
+                    id="refreshButton"
+                >
+                    Refresh Records
+                </button>
+            </div>
+
+            <div
+                id="message"
+                class="message"
+                role="status"
+                aria-live="polite"
+                hidden
+            ></div>
+
+            <div class="table-card">
+                <div class="table-scroll">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Registration ID</th>
+                                <th>Student Name</th>
+                                <th>Course ID</th>
+                                <th>Registration Date</th>
+                            </tr>
+                        </thead>
+
+                        <tbody id="registrationTable">
+                            <tr>
+                                <td colspan="4">Loading registrations...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="form-actions">
+                <a href="/register.html" class="btn-primary">
+                    Register a Student
+                </a>
+
+                <a href="/list.html" class="btn-secondary">
+                    View Courses
+                </a>
+            </div>
+
+        </section>
+    </main>
+
+    <footer class="footer">
+        <p>© 2026 CourseConnect · Your learning journey starts here.</p>
+    </footer>
+
+    <script>
+        const registrationTable =
+            document.getElementById("registrationTable");
+
+        const totalCount =
+            document.getElementById("totalCount");
+
+        const searchInput =
+            document.getElementById("searchInput");
+
+        const message =
+            document.getElementById("message");
+
+        const refreshButton =
+            document.getElementById("refreshButton");
+
+        let registrations = [];
+
+        function escapeHTML(value) {
+            return String(value ?? "").replace(/[&<>"']/g, function (char) {
+                return {
+                    "&": "&amp;",
+                    "<": "&lt;",
+                    ">": "&gt;",
+                    '"': "&quot;",
+                    "'": "&#039;"
+                }[char];
+            });
+        }
+
+        function showMessage(text, type) {
+            message.textContent = text;
+            message.className = "message " + type;
+            message.hidden = false;
+        }
+
+        function formatDate(value) {
+            if (!value) {
+                return "—";
+            }
+
+            // Handle date values returned by MySQL.
+            const dateString = String(value);
+
+            const date = new Date(
+                /^\d{4}-\d{2}-\d{2}$/.test(dateString)
+                    ? dateString + "T00:00:00"
+                    : dateString
+            );
+
+            if (Number.isNaN(date.getTime())) {
+                return dateString;
+            }
+
+            return date.toLocaleDateString("en-IN");
+        }
+
+        function renderRegistrations() {
+            const searchTerm =
+                searchInput.value.trim().toLowerCase();
+
+            // Show the oldest registration first.
+            // Newer registrations appear at the bottom.
+            const sortedRegistrations = [...registrations].sort(
+                function (a, b) {
+                    return Number(a.Registration_ID) -
+                           Number(b.Registration_ID);
+                }
+            );
+
+            const filtered = sortedRegistrations.filter(
+                function (registration) {
+                    return [
+                        registration.Registration_ID,
+                        registration.Student_Name,
+                        registration.Course_ID
+                    ].some(function (value) {
+                        return String(value ?? "")
+                            .toLowerCase()
+                            .includes(searchTerm);
+                    });
+                }
+            );
+
+            totalCount.textContent = registrations.length;
+
+            if (filtered.length === 0) {
+                registrationTable.innerHTML = `
+                    <tr>
+                        <td colspan="4" class="empty">
+                            ${registrations.length === 0
+                                ? "No registrations found yet."
+                                : "No registrations match your search."}
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            registrationTable.innerHTML = filtered.map(
+                function (registration) {
+                    return `
+                        <tr>
+                            <td>${escapeHTML(
+                                registration.Registration_ID
+                            )}</td>
+
+                            <td>${escapeHTML(
+                                registration.Student_Name
+                            )}</td>
+
+                            <td>${escapeHTML(
+                                registration.Course_ID
+                            )}</td>
+
+                            <td>${escapeHTML(
+                                formatDate(registration.Registered_On)
+                            )}</td>
+                        </tr>
+                    `;
+                }
+            ).join("");
+        }
+
+        async function loadRegistrations() {
+            refreshButton.disabled = true;
+            refreshButton.textContent = "Loading...";
+
+            registrationTable.innerHTML = `
+                <tr>
+                    <td colspan="4">Loading registrations...</td>
+                </tr>
+            `;
+
+            try {
+                const response = await fetch("/registrations");
+
+                if (!response.ok) {
+                    throw new Error(
+                        "Unable to retrieve registration records."
+                    );
+                }
+
+                const data = await response.json();
+
+                if (!Array.isArray(data)) {
+                    throw new Error(
+                        "The server returned an unexpected response."
+                    );
+                }
+
+                registrations = data;
+
+                // renderRegistrations() sorts IDs in ascending order.
+                renderRegistrations();
+
+                message.hidden = true;
+
+                if (registrations.length === 0) {
+                    showMessage(
+                        "No registrations are available yet.",
+                        "info"
+                    );
+                }
+
+            } catch (error) {
+                registrations = [];
+                totalCount.textContent = "0";
+
+                registrationTable.innerHTML = `
+                    <tr>
+                        <td colspan="4">
+                            Could not load registration records.
+                        </td>
+                    </tr>
+                `;
+
+                showMessage(
+                    error.message +
+                    " Check that the server and database are running.",
+                    "error"
+                );
+
+            } finally {
+                refreshButton.disabled = false;
+                refreshButton.textContent = "Refresh Records";
+            }
+        }
+
+        searchInput.addEventListener(
+            "input",
+            renderRegistrations
+        );
+
+        refreshButton.addEventListener(
+            "click",
+            loadRegistrations
+        );
+
+        loadRegistrations();
+    </script>
+
+</body>
+</html>

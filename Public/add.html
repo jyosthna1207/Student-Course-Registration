@@ -1,0 +1,231 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add Course | CourseConnect</title>
+    <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="/" class="logo">
+                <span class="logo-mark">C</span>
+                <span>CourseConnect</span>
+            </a>
+            <div class="nav-links">
+                <a href="/">Home</a>
+                <a href="/list.html">Courses</a>
+                <a href="/search.html">Search</a>
+                <a href="/register.html">Register</a>
+                <a href="/registrations.html">Registrations</a>
+                <a href="/add.html">Add Course</a>
+                <a href="/update.html">Update</a>
+                <a href="/delete.html">Delete</a>
+            </div>
+        </div>
+    </nav>
+
+    <main class="container">
+        <div class="page-heading">
+            <p class="eyebrow">COURSE MANAGEMENT</p>
+            <h1>Add a New Course</h1>
+            <p>Enter the course information to add it to CourseConnect.</p>
+        </div>
+
+        <!-- Unique image for the Add Course page -->
+        <img
+            class="page-image"
+            src="https://images.unsplash.com/photo-1456513080510-7bf3a84b82f8?auto=format&fit=crop&w=1200&q=80"
+            alt="Books and study materials on a desk"
+            loading="lazy"
+        >
+
+        <section class="form-card">
+            <h2 class="section-title">Course Details</h2>
+            <p>Fill in all the required fields below.</p>
+
+            <form id="addCourseForm">
+                <div class="form-grid">
+
+                    <div class="field">
+                        <label for="courseId">Course ID</label>
+                        <input
+                            type="number"
+                            id="courseId"
+                            min="1"
+                            step="1"
+                            placeholder="Example: 106"
+                            required
+                        >
+                    </div>
+
+                    <div class="field">
+                        <label for="courseCode">Course Code</label>
+                        <input
+                            type="text"
+                            id="courseCode"
+                            maxlength="30"
+                            placeholder="Example: CSE106"
+                            required
+                        >
+                    </div>
+
+                    <div class="field full">
+                        <label for="courseName">Course Name</label>
+                        <input
+                            type="text"
+                            id="courseName"
+                            maxlength="150"
+                            placeholder="Enter the course name"
+                            required
+                        >
+                    </div>
+
+                    <div class="field">
+                        <label for="credits">Credits</label>
+                        <input
+                            type="number"
+                            id="credits"
+                            min="0"
+                            max="20"
+                            step="1"
+                            placeholder="Example: 3"
+                            required
+                        >
+                    </div>
+
+                    <div class="field">
+                        <label for="department">Department</label>
+                        <input
+                            type="text"
+                            id="department"
+                            maxlength="100"
+                            placeholder="Example: CSE"
+                            required
+                        >
+                    </div>
+
+                    <div class="field full">
+                        <label for="semester">Semester</label>
+                        <select id="semester" required>
+                            <option value="">Select semester</option>
+                            <option value="1">Semester 1</option>
+                            <option value="2">Semester 2</option>
+                            <option value="3">Semester 3</option>
+                            <option value="4">Semester 4</option>
+                            <option value="5">Semester 5</option>
+                            <option value="6">Semester 6</option>
+                            <option value="7">Semester 7</option>
+                            <option value="8">Semester 8</option>
+                        </select>
+                    </div>
+
+                </div>
+
+                <div class="form-actions">
+                    <button type="submit" class="btn-primary" id="submitButton">
+                        Add Course
+                    </button>
+                    <button type="reset" class="btn-secondary">
+                        Clear Form
+                    </button>
+                    <a href="/list.html" class="btn-secondary">View Courses</a>
+                </div>
+            </form>
+
+            <div id="message" class="message" role="status"
+                 aria-live="polite" hidden></div>
+        </section>
+    </main>
+
+    <footer class="footer">
+        <p>© 2026 CourseConnect · Your learning journey starts here.</p>
+    </footer>
+
+    <script>
+        const form = document.getElementById("addCourseForm");
+        const message = document.getElementById("message");
+        const submitButton = document.getElementById("submitButton");
+
+        function showMessage(text, type) {
+            message.textContent = text;
+            message.className = "message " + type;
+            message.hidden = false;
+        }
+
+        form.addEventListener("submit", async function (event) {
+            event.preventDefault();
+
+            const courseId = Number(
+                document.getElementById("courseId").value
+            );
+            const courseCode = document.getElementById("courseCode").value.trim();
+            const courseName = document.getElementById("courseName").value.trim();
+            const credits = Number(document.getElementById("credits").value);
+            const department = document.getElementById("department").value.trim();
+            const semester = Number(document.getElementById("semester").value);
+
+            if (
+                !Number.isInteger(courseId) || courseId < 1 ||
+                !courseCode || !courseName ||
+                !Number.isInteger(credits) || credits < 0 || credits > 20 ||
+                !department ||
+                !Number.isInteger(semester) || semester < 1 || semester > 8
+            ) {
+                showMessage("Please enter valid values in all fields.", "error");
+                return;
+            }
+
+            const course = {
+                Course_ID: courseId,
+                Course_code: courseCode,
+                Course_name: courseName,
+                Credits: credits,
+                Department: department,
+                Semester: semester
+            };
+
+            submitButton.disabled = true;
+            submitButton.textContent = "Adding...";
+
+            try {
+                const response = await fetch("/courses", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify(course)
+                });
+
+                const result = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(
+                        result.message || result.error ||
+                        "Could not add the course."
+                    );
+                }
+
+                showMessage(
+                    "Course added successfully! Open the Courses page to see it.",
+                    "success"
+                );
+
+                form.reset();
+            } catch (error) {
+                showMessage(
+                    error.message || "Something went wrong. Please try again.",
+                    "error"
+                );
+            } finally {
+                submitButton.disabled = false;
+                submitButton.textContent = "Add Course";
+            }
+        });
+    </script>
+
+</body>
+</html>

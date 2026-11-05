@@ -1,0 +1,228 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register for a Course | CourseConnect</title>
+    <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="/" class="logo">
+                <span class="logo-mark">C</span>
+                <span>CourseConnect</span>
+            </a>
+            <div class="nav-links">
+                <a href="/">Home</a>
+                <a href="/list.html">Courses</a>
+                <a href="/search.html">Search</a>
+                <a class="active" href="/register.html">Register</a>
+                <a href="/registrations.html">Registrations</a>
+                <a href="/add.html">Add Course</a>
+                <a href="/update.html">Update</a>
+                <a href="/delete.html">Delete</a>
+            </div>
+        </div>
+    </nav>
+
+    <main class="container">
+        <div class="page-heading">
+            <p class="eyebrow">JOIN A COURSE</p>
+            <h1>Course Registration</h1>
+            <p>Enter your details and choose the course you want to study.</p>
+        </div>
+
+        <!-- Registration page image -->
+        <img
+            class="page-image"
+            src="https://images.unsplash.com/photo-1434030216411-0b793f4b4173?auto=format&fit=crop&w=1200&q=80"
+            alt="Student writing notes in a notebook"
+            loading="lazy"
+        >
+
+        <section class="form-card">
+            <h2 class="section-title">Registration Details</h2>
+            <p>Complete the form below to register for a course.</p>
+
+            <form id="registrationForm">
+                <div class="form-grid">
+
+                    <div class="field full">
+                        <label for="studentName">Student Name</label>
+                        <input
+                            type="text"
+                            id="studentName"
+                            name="Student_Name"
+                            placeholder="Enter your full name"
+                            required
+                            maxlength="100"
+                        >
+                    </div>
+
+                    <div class="field full">
+                        <label for="courseSelect">Select Course</label>
+                        <select id="courseSelect" name="Course_ID" required>
+                            <option value="">Loading courses...</option>
+                        </select>
+                    </div>
+
+                </div>
+
+                <div class="form-actions">
+                    <button type="submit" class="btn-primary" id="submitButton">
+                        Register Now
+                    </button>
+                    <button type="reset" class="btn-secondary">
+                        Clear Form
+                    </button>
+                </div>
+            </form>
+
+            <div id="message" class="message" role="status" aria-live="polite" hidden></div>
+        </section>
+
+        <section class="section">
+            <div class="section-title">
+                <h2>Before you register</h2>
+            </div>
+
+            <div class="feature-grid">
+                <article class="feature-card">
+                    <h3>Choose carefully</h3>
+                    <p>Select the course you want to register for from the available courses.</p>
+                </article>
+
+                <article class="feature-card">
+                    <h3>Check your name</h3>
+                    <p>Enter your correct full name before submitting the registration.</p>
+                </article>
+
+                <article class="feature-card">
+                    <h3>Confirmation</h3>
+                    <p>After successful registration, visit the Registrations page to see your record.</p>
+                </article>
+            </div>
+        </section>
+    </main>
+
+    <footer class="footer">
+        <p>© 2026 CourseConnect · Your learning journey starts here.</p>
+    </footer>
+
+    <script>
+        const courseSelect = document.getElementById("courseSelect");
+        const registrationForm = document.getElementById("registrationForm");
+        const message = document.getElementById("message");
+        const submitButton = document.getElementById("submitButton");
+
+        function showMessage(text, type) {
+            message.textContent = text;
+            message.className = "message " + type;
+            message.hidden = false;
+        }
+
+        async function loadCourses() {
+            try {
+                const response = await fetch("/courses");
+
+                if (!response.ok) {
+                    throw new Error("Unable to load courses.");
+                }
+
+                const courses = await response.json();
+
+                courseSelect.replaceChildren();
+
+                const placeholder = document.createElement("option");
+                placeholder.value = "";
+                placeholder.textContent = "Choose a course";
+                courseSelect.appendChild(placeholder);
+
+                courses.forEach(course => {
+                    const option = document.createElement("option");
+                    option.value = course.Course_ID;
+                    option.textContent =
+                        course.Course_code + " - " + course.Course_name;
+                    courseSelect.appendChild(option);
+                });
+
+                if (courses.length === 0) {
+                    placeholder.textContent = "No courses available";
+                }
+            } catch (error) {
+                courseSelect.replaceChildren();
+
+                const option = document.createElement("option");
+                option.value = "";
+                option.textContent = "Could not load courses";
+                courseSelect.appendChild(option);
+
+                showMessage(
+                    "Could not load courses. Check that the server and database are running.",
+                    "error"
+                );
+            }
+        }
+
+        registrationForm.addEventListener("submit", async function (event) {
+            event.preventDefault();
+
+            const studentName = document
+                .getElementById("studentName")
+                .value.trim();
+
+            const courseID = courseSelect.value;
+
+            if (!studentName || !courseID) {
+                showMessage("Please enter your name and select a course.", "error");
+                return;
+            }
+
+            submitButton.disabled = true;
+            submitButton.textContent = "Submitting...";
+
+            try {
+                const response = await fetch("/registrations", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({
+                        Student_Name: studentName,
+                        Course_ID: Number(courseID)
+                    })
+                });
+
+                const result = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(
+                        result.message || result.error || "Registration failed."
+                    );
+                }
+
+                showMessage(
+                    "Registration successful! You can view your record on the Registrations page.",
+                    "success"
+                );
+
+                registrationForm.reset();
+            } catch (error) {
+                showMessage(
+                    error.message || "Something went wrong. Please try again.",
+                    "error"
+                );
+            } finally {
+                submitButton.disabled = false;
+                submitButton.textContent = "Register Now";
+            }
+        });
+
+        loadCourses();
+    </script>
+
+</body>
+</html>

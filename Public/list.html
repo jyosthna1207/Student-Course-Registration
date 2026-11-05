@@ -1,0 +1,245 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Courses | CourseConnect</title>
+    <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+
+<nav class="navbar">
+    <div class="nav-container">
+        <a class="logo" href="/">
+            <span class="logo-mark">C</span>
+            <span>CourseConnect</span>
+        </a>
+
+        <div class="nav-links">
+            <a href="/">Home</a>
+            <a class="active" href="/list.html">Courses</a>
+            <a href="/search.html">Search</a>
+            <a href="/register.html">Register</a>
+            <a href="/registrations.html">Registrations</a>
+            <a href="/add.html">Add course</a>
+            <a href="/update.html">Update</a>
+            <a href="/delete.html">Delete</a>
+        </div>
+    </div>
+</nav>
+
+<main class="container">
+
+    <div class="page-heading">
+        <div>
+            <div class="eyebrow">Course catalogue</div>
+            <h1>Explore courses</h1>
+            <p>Find courses and explore their details.</p>
+        </div>
+
+        <a class="btn btn-primary" href="/register.html">
+            + Register for a course
+        </a>
+    </div>
+
+    <!-- Courses page image -->
+    <img
+        class="page-image"
+        src="https://images.unsplash.com/photo-1497633762265-9d179a990aa6?auto=format&fit=crop&w=1200&q=80"
+        alt="Books and academic study materials"
+        loading="lazy"
+    >
+
+    <div class="toolbar">
+        <input
+            type="search"
+            id="searchInput"
+            placeholder="Search by ID, code or course name..."
+            aria-label="Search courses"
+        >
+
+        <select id="departmentFilter" aria-label="Filter by department">
+            <option value="">All departments</option>
+        </select>
+
+        <select id="semesterFilter" aria-label="Filter by semester">
+            <option value="">All semesters</option>
+        </select>
+
+        <button type="button" class="btn btn-outline" id="resetButton">
+            Reset
+        </button>
+    </div>
+
+    <div class="table-card">
+        <div class="table-scroll">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Course ID</th>
+                        <th>Course code</th>
+                        <th>Course name</th>
+                        <th>Credits</th>
+                        <th>Department</th>
+                        <th>Semester</th>
+                    </tr>
+                </thead>
+
+                <tbody id="courseRows">
+                    <tr>
+                        <td colspan="6" class="empty">
+                            Loading courses...
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <p class="small-note" id="resultCount"></p>
+    <div id="message" class="message"></div>
+
+</main>
+
+<footer class="footer">
+    <strong>CourseConnect</strong>
+    <p>Student Course Registration System</p>
+</footer>
+
+<script>
+const courseRows = document.getElementById("courseRows");
+const searchInput = document.getElementById("searchInput");
+const departmentFilter = document.getElementById("departmentFilter");
+const semesterFilter = document.getElementById("semesterFilter");
+const resultCount = document.getElementById("resultCount");
+const message = document.getElementById("message");
+
+let courses = [];
+
+function escapeHTML(value) {
+    return String(value ?? "").replace(/[&<>"']/g, character => ({
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        '"': "&quot;",
+        "'": "&#39;"
+    })[character]);
+}
+
+function renderCourses() {
+    const query = searchInput.value.trim().toLowerCase();
+    const selectedDepartment = departmentFilter.value;
+    const selectedSemester = semesterFilter.value;
+
+    const filteredCourses = courses.filter(course => {
+        const searchableText = [
+            course.Course_ID,
+            course.Course_code,
+            course.Course_name
+        ].join(" ").toLowerCase();
+
+        return searchableText.includes(query)
+            && (!selectedDepartment ||
+                course.Department === selectedDepartment)
+            && (!selectedSemester ||
+                String(course.Semester) === selectedSemester);
+    });
+
+    if (filteredCourses.length === 0) {
+        courseRows.innerHTML = `
+            <tr>
+                <td colspan="6" class="empty">
+                    No matching courses found. Try another search.
+                </td>
+            </tr>
+        `;
+    } else {
+        courseRows.innerHTML = filteredCourses.map(course => `
+            <tr>
+                <td>${escapeHTML(course.Course_ID)}</td>
+                <td>
+                    <span class="pill">
+                        ${escapeHTML(course.Course_code)}
+                    </span>
+                </td>
+                <td><strong>${escapeHTML(course.Course_name)}</strong></td>
+                <td>${escapeHTML(course.Credits)}</td>
+                <td>${escapeHTML(course.Department)}</td>
+                <td>${escapeHTML(course.Semester)}</td>
+            </tr>
+        `).join("");
+    }
+
+    resultCount.textContent =
+        `Showing ${filteredCourses.length} of ${courses.length} courses`;
+}
+
+async function loadCourses() {
+    courseRows.innerHTML = `
+        <tr>
+            <td colspan="6" class="empty">Loading courses...</td>
+        </tr>
+    `;
+
+    try {
+        const response = await fetch("/courses");
+        const data = await response.json();
+
+        if (!response.ok || !Array.isArray(data)) {
+            throw new Error(data.error || "Could not load courses.");
+        }
+
+        courses = data;
+
+        const departments = [
+            ...new Set(courses.map(c => c.Department).filter(Boolean))
+        ].sort();
+
+        const semesters = [
+            ...new Set(courses.map(c => String(c.Semester)).filter(Boolean))
+        ].sort();
+
+        departments.forEach(department => {
+            departmentFilter.add(
+                new Option(department, department)
+            );
+        });
+
+        semesters.forEach(semester => {
+            semesterFilter.add(
+                new Option("Semester " + semester, semester)
+            );
+        });
+
+        renderCourses();
+
+    } catch (error) {
+        courseRows.innerHTML = `
+            <tr>
+                <td colspan="6" class="empty">
+                    ${escapeHTML(error.message)}
+                    Please check that your server is running.
+                </td>
+            </tr>
+        `;
+        resultCount.textContent = "";
+    }
+}
+
+searchInput.addEventListener("input", renderCourses);
+departmentFilter.addEventListener("change", renderCourses);
+semesterFilter.addEventListener("change", renderCourses);
+
+document.getElementById("resetButton").addEventListener("click", () => {
+    searchInput.value = "";
+    departmentFilter.value = "";
+    semesterFilter.value = "";
+    renderCourses();
+});
+
+loadCourses();
+</script>
+
+</body>
+</html>

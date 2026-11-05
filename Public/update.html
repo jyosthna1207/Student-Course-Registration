@@ -1,0 +1,310 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Update Course | CourseConnect</title>
+    <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="/" class="logo">
+                <span class="logo-mark">C</span>
+                <span>CourseConnect</span>
+            </a>
+            <div class="nav-links">
+                <a href="/">Home</a>
+                <a href="/list.html">Courses</a>
+                <a href="/search.html">Search</a>
+                <a href="/register.html">Register</a>
+                <a href="/registrations.html">Registrations</a>
+                <a href="/add.html">Add Course</a>
+                <a href="/update.html">Update</a>
+                <a href="/delete.html">Delete</a>
+            </div>
+        </div>
+    </nav>
+
+    <main class="container">
+        <div class="page-heading">
+            <p class="eyebrow">COURSE MANAGEMENT</p>
+            <h1>Update Course Details</h1>
+            <p>Find an existing course, edit its details, and save your changes.</p>
+        </div>
+
+        <!-- Unique image for the Update Course page -->
+        <img
+            class="page-image"
+            src="https://images.unsplash.com/photo-1498050108023-c5249f4df085?auto=format&fit=crop&w=1200&q=80"
+            alt="Laptop and workspace for updating course information"
+            loading="lazy"
+        >
+
+        <section class="form-card">
+            <h2 class="section-title">Find Course</h2>
+
+            <form id="findForm">
+                <div class="form-grid">
+                    <div class="field full">
+                        <label for="searchId">Course ID</label>
+                        <input
+                            type="number"
+                            id="searchId"
+                            min="1"
+                            step="1"
+                            placeholder="Enter the Course ID"
+                            required
+                        >
+                    </div>
+                </div>
+
+                <div class="form-actions">
+                    <button type="submit" class="btn-primary" id="findButton">
+                        Load Course
+                    </button>
+                </div>
+            </form>
+
+            <div id="message" class="message" role="status"
+                 aria-live="polite" hidden></div>
+        </section>
+
+        <section class="form-card" id="editSection" hidden>
+            <h2 class="section-title">Edit Course Information</h2>
+            <p>The Course ID cannot be changed here.</p>
+
+            <form id="updateForm">
+                <div class="form-grid">
+
+                    <div class="field">
+                        <label for="courseId">Course ID</label>
+                        <input type="number" id="courseId" readonly>
+                    </div>
+
+                    <div class="field">
+                        <label for="courseCode">Course Code</label>
+                        <input type="text" id="courseCode" maxlength="30" required>
+                    </div>
+
+                    <div class="field full">
+                        <label for="courseName">Course Name</label>
+                        <input type="text" id="courseName" maxlength="150" required>
+                    </div>
+
+                    <div class="field">
+                        <label for="credits">Credits</label>
+                        <input type="number" id="credits" min="0" max="20" step="1" required>
+                    </div>
+
+                    <div class="field">
+                        <label for="department">Department</label>
+                        <input type="text" id="department" maxlength="100" required>
+                    </div>
+
+                    <div class="field full">
+                        <label for="semester">Semester</label>
+                        <select id="semester" required>
+                            <option value="">Select semester</option>
+                            <option value="1">Semester 1</option>
+                            <option value="2">Semester 2</option>
+                            <option value="3">Semester 3</option>
+                            <option value="4">Semester 4</option>
+                            <option value="5">Semester 5</option>
+                            <option value="6">Semester 6</option>
+                            <option value="7">Semester 7</option>
+                            <option value="8">Semester 8</option>
+                        </select>
+                    </div>
+
+                </div>
+
+                <div class="form-actions">
+                    <button type="submit" class="btn-primary" id="saveButton">
+                        Save Changes
+                    </button>
+                    <button type="reset" class="btn-secondary" id="clearButton">
+                        Clear Changes
+                    </button>
+                    <a href="/list.html" class="btn-secondary">View Courses</a>
+                </div>
+            </form>
+        </section>
+    </main>
+
+    <footer class="footer">
+        <p>© 2026 CourseConnect · Your learning journey starts here.</p>
+    </footer>
+
+    <script>
+        const findForm = document.getElementById("findForm");
+        const updateForm = document.getElementById("updateForm");
+        const editSection = document.getElementById("editSection");
+        const message = document.getElementById("message");
+
+        let originalCourse = null;
+
+        function showMessage(text, type) {
+            message.textContent = text;
+            message.className = "message " + type;
+            message.hidden = false;
+        }
+
+        function getCourseId() {
+            return Number(document.getElementById("searchId").value);
+        }
+
+        function clearEditForm() {
+            editSection.hidden = true;
+            updateForm.reset();
+            originalCourse = null;
+        }
+
+        findForm.addEventListener("submit", async function (event) {
+            event.preventDefault();
+
+            const id = getCourseId();
+
+            if (!Number.isInteger(id) || id < 1) {
+                showMessage("Please enter a valid Course ID.", "error");
+                return;
+            }
+
+            const findButton = document.getElementById("findButton");
+            findButton.disabled = true;
+            findButton.textContent = "Loading...";
+
+            try {
+                const response = await fetch(
+                    "/courses/" + encodeURIComponent(id)
+                );
+                const course = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(
+                        course.message || course.error || "Course not found."
+                    );
+                }
+
+                originalCourse = course;
+
+                document.getElementById("courseId").value = course.Course_ID;
+                document.getElementById("courseCode").value = course.Course_code ?? "";
+                document.getElementById("courseName").value = course.Course_name ?? "";
+                document.getElementById("credits").value = course.Credits ?? "";
+                document.getElementById("department").value = course.Department ?? "";
+                document.getElementById("semester").value = String(course.Semester ?? "");
+
+                editSection.hidden = false;
+
+                showMessage(
+                    "Course loaded. Edit the fields and save your changes.",
+                    "success"
+                );
+            } catch (error) {
+                clearEditForm();
+                showMessage(error.message || "Unable to load course.", "error");
+            } finally {
+                findButton.disabled = false;
+                findButton.textContent = "Load Course";
+            }
+        });
+
+        document.getElementById("clearButton").addEventListener(
+            "click",
+            function () {
+                if (!originalCourse) return;
+
+                document.getElementById("courseId").value =
+                    originalCourse.Course_ID;
+                document.getElementById("courseCode").value =
+                    originalCourse.Course_code ?? "";
+                document.getElementById("courseName").value =
+                    originalCourse.Course_name ?? "";
+                document.getElementById("credits").value =
+                    originalCourse.Credits ?? "";
+                document.getElementById("department").value =
+                    originalCourse.Department ?? "";
+                document.getElementById("semester").value =
+                    String(originalCourse.Semester ?? "");
+            }
+        );
+
+        updateForm.addEventListener("submit", async function (event) {
+            event.preventDefault();
+
+            if (!originalCourse) {
+                showMessage("Load a course before updating it.", "error");
+                return;
+            }
+
+            const course = {
+                Course_code: document.getElementById("courseCode").value.trim(),
+                Course_name: document.getElementById("courseName").value.trim(),
+                Credits: Number(document.getElementById("credits").value),
+                Department: document.getElementById("department").value.trim(),
+                Semester: Number(document.getElementById("semester").value)
+            };
+
+            if (
+                !course.Course_code ||
+                !course.Course_name ||
+                !course.Department ||
+                !Number.isInteger(course.Credits) ||
+                course.Credits < 0 ||
+                course.Credits > 20 ||
+                !Number.isInteger(course.Semester) ||
+                course.Semester < 1 ||
+                course.Semester > 8
+            ) {
+                showMessage("Please enter valid values in all fields.", "error");
+                return;
+            }
+
+            const saveButton = document.getElementById("saveButton");
+            saveButton.disabled = true;
+            saveButton.textContent = "Saving...";
+
+            try {
+                const response = await fetch(
+                    "/courses/" + encodeURIComponent(originalCourse.Course_ID),
+                    {
+                        method: "PUT",
+                        headers: {
+                            "Content-Type": "application/json"
+                        },
+                        body: JSON.stringify(course)
+                    }
+                );
+
+                const result = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(
+                        result.message || result.error ||
+                        "Could not update course."
+                    );
+                }
+
+                showMessage("Course updated successfully!", "success");
+
+                originalCourse = {
+                    ...originalCourse,
+                    ...course
+                };
+            } catch (error) {
+                showMessage(
+                    error.message || "Unable to update course.",
+                    "error"
+                );
+            } finally {
+                saveButton.disabled = false;
+                saveButton.textContent = "Save Changes";
+            }
+        });
+    </script>
+
+</body>
+</html>

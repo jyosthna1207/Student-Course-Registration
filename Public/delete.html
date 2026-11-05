@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Delete Course | CourseConnect</title>
+    <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="/" class="logo">
+                <span class="logo-mark">C</span>
+                <span>CourseConnect</span>
+            </a>
+            <div class="nav-links">
+                <a href="/">Home</a>
+                <a href="/list.html">Courses</a>
+                <a href="/search.html">Search</a>
+                <a href="/register.html">Register</a>
+                <a href="/registrations.html">Registrations</a>
+                <a href="/add.html">Add Course</a>
+                <a href="/update.html">Update</a>
+                <a href="/delete.html" class="active">Delete</a>
+            </div>
+        </div>
+    </nav>
+
+    <main class="container">
+        <div class="page-heading">
+            <p class="eyebrow">COURSE MANAGEMENT</p>
+            <h1>Delete a Course</h1>
+            <p>Find a course and verify its details before removing it.</p>
+        </div>
+
+        <!-- Unique image for the Delete Course page -->
+        <img
+            src="https://images.unsplash.com/photo-1524995997946-a1c2e315a42f?auto=format&fit=crop&w=1200&q=80"
+            alt="Rows of books in a library"
+            class="page-image"
+        >
+
+        <section class="form-card">
+            <h2 class="section-title">Find Course</h2>
+
+            <form id="findForm">
+                <div class="form-grid">
+                    <div class="field full">
+                        <label for="courseIdInput">Course ID</label>
+                        <input
+                            type="number"
+                            id="courseIdInput"
+                            min="1"
+                            step="1"
+                            placeholder="Enter the Course ID"
+                            required
+                        >
+                    </div>
+                </div>
+
+                <div class="form-actions">
+                    <button type="submit" class="btn-primary" id="findButton">
+                        Find Course
+                    </button>
+                </div>
+            </form>
+
+            <div id="message" class="message" role="status"
+                 aria-live="polite" hidden></div>
+        </section>
+
+        <section class="form-card" id="courseSection" hidden>
+            <p class="eyebrow">COURSE DETAILS</p>
+            <h2 id="displayName" class="section-title">Course Information</h2>
+
+            <div class="detail-grid">
+                <div class="detail-item">
+                    <span>Course ID</span>
+                    <strong id="displayId">—</strong>
+                </div>
+
+                <div class="detail-item">
+                    <span>Course Code</span>
+                    <strong id="displayCode">—</strong>
+                </div>
+
+                <div class="detail-item">
+                    <span>Credits</span>
+                    <strong id="displayCredits">—</strong>
+                </div>
+
+                <div class="detail-item">
+                    <span>Department</span>
+                    <strong id="displayDepartment">—</strong>
+                </div>
+
+                <div class="detail-item">
+                    <span>Semester</span>
+                    <strong id="displaySemester">—</strong>
+                </div>
+            </div>
+
+            <div class="danger-note">
+                <strong>Warning:</strong>
+                Deleting a course may also delete its associated registrations
+                if your database uses ON DELETE CASCADE. This action cannot
+                be undone.
+            </div>
+
+            <div class="form-actions">
+                <button type="button" class="btn-primary" id="deleteButton">
+                    Delete This Course
+                </button>
+
+                <button type="button" class="btn-secondary" id="cancelButton">
+                    Cancel
+                </button>
+            </div>
+        </section>
+    </main>
+
+    <footer class="footer">
+        <p>© 2026 CourseConnect · Your learning journey starts here.</p>
+    </footer>
+
+    <script>
+        const findForm = document.getElementById("findForm");
+        const courseSection = document.getElementById("courseSection");
+        const message = document.getElementById("message");
+        const findButton = document.getElementById("findButton");
+        const deleteButton = document.getElementById("deleteButton");
+
+        let selectedCourse = null;
+
+        function showMessage(text, type) {
+            message.textContent = text;
+            message.className = "message " + type;
+            message.hidden = false;
+        }
+
+        function clearSelectedCourse() {
+            selectedCourse = null;
+            courseSection.hidden = true;
+        }
+
+        function displayCourse(course) {
+            document.getElementById("displayName").textContent =
+                course.Course_name ?? "Unnamed course";
+
+            document.getElementById("displayId").textContent =
+                course.Course_ID ?? "—";
+
+            document.getElementById("displayCode").textContent =
+                course.Course_code ?? "—";
+
+            document.getElementById("displayCredits").textContent =
+                course.Credits ?? "—";
+
+            document.getElementById("displayDepartment").textContent =
+                course.Department ?? "—";
+
+            document.getElementById("displaySemester").textContent =
+                course.Semester ?? "—";
+
+            courseSection.hidden = false;
+        }
+
+        findForm.addEventListener("submit", async function (event) {
+            event.preventDefault();
+
+            const id = Number(
+                document.getElementById("courseIdInput").value
+            );
+
+            if (!Number.isInteger(id) || id < 1) {
+                showMessage("Please enter a valid Course ID.", "error");
+                return;
+            }
+
+            clearSelectedCourse();
+            findButton.disabled = true;
+            findButton.textContent = "Searching...";
+
+            try {
+                const response = await fetch(
+                    "/courses/" + encodeURIComponent(id)
+                );
+
+                const result = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(
+                        result.message || result.error || "Course not found."
+                    );
+                }
+
+                selectedCourse = result;
+                displayCourse(result);
+
+                showMessage(
+                    "Course found. Verify the details before deleting.",
+                    "success"
+                );
+            } catch (error) {
+                showMessage(
+                    error.message || "Unable to find the course.",
+                    "error"
+                );
+            } finally {
+                findButton.disabled = false;
+                findButton.textContent = "Find Course";
+            }
+        });
+
+        deleteButton.addEventListener("click", async function () {
+            if (!selectedCourse) {
+                showMessage("Find a course before deleting it.", "error");
+                return;
+            }
+
+            const confirmed = window.confirm(
+                "Are you sure you want to delete course " +
+                selectedCourse.Course_ID + " - " +
+                selectedCourse.Course_name +
+                "?\n\nThis action cannot be undone."
+            );
+
+            if (!confirmed) {
+                return;
+            }
+
+            deleteButton.disabled = true;
+            deleteButton.textContent = "Deleting...";
+
+            try {
+                const response = await fetch(
+                    "/courses/" +
+                    encodeURIComponent(selectedCourse.Course_ID),
+                    { method: "DELETE" }
+                );
+
+                const result = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(
+                        result.message || result.error ||
+                        "Could not delete course."
+                    );
+                }
+
+                clearSelectedCourse();
+
+                showMessage(
+                    "Course deleted successfully. The course list has been updated in the database.",
+                    "success"
+                );
+            } catch (error) {
+                showMessage(
+                    error.message || "Unable to delete the course.",
+                    "error"
+                );
+            } finally {
+                deleteButton.disabled = false;
+                deleteButton.textContent = "Delete This Course";
+            }
+        });
+
+        document.getElementById("cancelButton").addEventListener(
+            "click",
+            function () {
+                clearSelectedCourse();
+                message.hidden = true;
+            }
+        );
+    </script>
+
+</body>
+</html>
